@@ -1,9 +1,9 @@
 import { Navbar, Container, Nav } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import useAuthContext from "../../hooks/useAuth.js";
 
 export default function TopNav() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthContext();
   return (
     <Navbar bg="light" className="mb-3">
       <Container>

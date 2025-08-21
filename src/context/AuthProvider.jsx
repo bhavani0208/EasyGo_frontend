@@ -2,7 +2,7 @@ import { createContext, useState, useMemo } from "react";
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(() => {
     const raw = localStorage.getItem("user");
@@ -26,3 +26,5 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(() => ({ token, user, login, logout }), [token, user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthProvider;
