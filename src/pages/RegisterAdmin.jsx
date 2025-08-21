@@ -65,18 +65,49 @@
 //   );
 // }
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
+import { fetchCompanies } from "../api/companies";
+import { registerApi } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterAdmin() {
-  const [companyName, setCompanyName] = useState("");
+  const [companies, setCompanies] = useState([]);
+  const [company, setCompany] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
+  const nav = useNavigate();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchCompanies();
+        setCompanies(data);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ companyName, email, password });
-    // 🔗 Call backend API for admin registration
+    setLoading(true);
+    setError(null);
+    try {
+      await registerApi({ name, email, password, role: "ADMIN", company });
+      setSuccess(true);
+      setTimeout(() => nav("/login", { replace: true }), 1200);
+    } catch (e) {
+      setError(
+        e?.response?.data?.message || e.message || "Registration failed"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -100,15 +131,34 @@ export default function RegisterAdmin() {
                 📍 Optimize your company’s commute with EasyGo
               </p>
               <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="companyName">
-                  <Form.Label className="fw-semibold">
-                    🏢 Company Name
-                  </Form.Label>
+                {success && (
+                  <div className="alert alert-success">
+                    Registration successful! Redirecting to login…
+                  </div>
+                )}
+                <Form.Group className="mb-3" controlId="company">
+                  <Form.Label className="fw-semibold">🏢 Company</Form.Label>
+                  <Form.Select
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    required
+                  >
+                    <option value="">Select company</option>
+                    {companies.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="name">
+                  <Form.Label className="fw-semibold">👤 Full Name</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Enter company name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </Form.Group>
@@ -136,8 +186,13 @@ export default function RegisterAdmin() {
                 </Form.Group>
 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" size="lg">
-                    🚀 Register
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? "Submitting…" : "🚀 Register"}
                   </Button>
                   <Button variant="outline-secondary" size="lg" href="/login">
                     🔙 Back to Login

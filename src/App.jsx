@@ -4,8 +4,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import RegisterAdmin from "./pages/RegisterAdmin";
 import Login from "./pages/Login";
+import AcceptInvite from "./pages/AcceptInvite";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import EmployeeDashboard from "./pages/dashboards/EmployeeDashboard";
+import BranchList from "./pages/branches/BranchList";
+import BranchCreate from "./pages/branches/BranchCreate";
+import BranchEdit from "./pages/branches/BranchEdit";
 
 // import Login from "./pages/Login";
 // import AcceptInvite from "./pages/AcceptInvite";
@@ -19,8 +23,12 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/register-admin" element={<RegisterAdmin />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/branches" element={<BranchList />} />
+        <Route path="/branches/create" element={<BranchCreate />} />
+        <Route path="/branches/:id/edit" element={<BranchEdit />} />
       </Routes>
     </div>
 
