@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import { loginApi } from "../api/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const[err ,setErr]=useState("");
   const navigate = useNavigate();
+  const {Login} = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErr("");
 
     const payload = { email, password };
 

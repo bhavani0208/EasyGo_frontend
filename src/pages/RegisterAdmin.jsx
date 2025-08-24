@@ -1,82 +1,26 @@
-// import { useState } from "react";
-// import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
-
-// export default function RegisterAdmin() {
-//   const [companyName, setCompanyName] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     console.log({ companyName, email, password });
-//     // 🔗 Here you will call your backend API to register admin
-//   };
-
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center vh-100">
-//       <Row>
-//         <Col>
-//           <Card className="p-4 shadow rounded-4">
-//             <h2 className="text-center mb-4">Admin Registration</h2>
-//             <Form onSubmit={handleSubmit}>
-//               <Form.Group className="mb-3" controlId="companyName">
-//                 <Form.Label>Company Name</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   placeholder="Enter company name"
-//                   value={companyName}
-//                   onChange={(e) => setCompanyName(e.target.value)}
-//                   required
-//                 />
-//               </Form.Group>
-
-//               <Form.Group className="mb-3" controlId="email">
-//                 <Form.Label>Email</Form.Label>
-//                 <Form.Control
-//                   type="email"
-//                   placeholder="Enter email"
-//                   value={email}
-//                   onChange={(e) => setEmail(e.target.value)}
-//                   required
-//                 />
-//               </Form.Group>
-
-//               <Form.Group className="mb-3" controlId="password">
-//                 <Form.Label>Password</Form.Label>
-//                 <Form.Control
-//                   type="password"
-//                   placeholder="Enter password"
-//                   value={password}
-//                   onChange={(e) => setPassword(e.target.value)}
-//                   required
-//                 />
-//               </Form.Group>
-
-//               <div className="d-grid">
-//                 <Button variant="primary" type="submit">
-//                   Register
-//                 </Button>
-//               </div>
-//             </Form>
-//           </Card>
-//         </Col>
-//       </Row>
-//     </Container>
-//   );
-// }
 
 import { useState } from "react";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
+import {registerAdminApi} from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterAdmin() {
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+   const [companyId, setCompanyId] = useState(""); // you already create company in backend; pick its id
+  const [err, setErr] = useState("");
+  const nav = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ companyName, email, password });
-    // 🔗 Call backend API for admin registration
+    setErr("");
+    try {
+      await registerAdminApi({ email, password, companyId });
+      nav("/login", { replace: true });
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Registration failed");
+    }
   };
 
   return (

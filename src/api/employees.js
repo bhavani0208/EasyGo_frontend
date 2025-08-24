@@ -1,4 +1,4 @@
-import { api } from "./client";
+import api  from "./client";
 
 export const fetchEmployeesByBranch = async (branchId) =>
   (await api.get(`/employees/branch/${branchId}`)).data;
@@ -13,3 +13,6 @@ export const fetchMyEmployee = async () =>
 // Update my own workType/homeLocation as EMPLOYEE
 export const updateEmployee = async (id, payload) =>
   (await api.put(`/employees/${id}`, payload)).data;
+
+export const inviteEmployee = async (payload) =>
+  (await api.post("/employees/invite", payload)).data;

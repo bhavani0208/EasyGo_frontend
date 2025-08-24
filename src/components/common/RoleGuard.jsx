@@ -1,10 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
-import useAuthContext from "../../hooks/useAuth.js";
+import { Navigate } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
 
-export default function RoleGuard({ allow = [] }) {
-  const { user } = useAuthContext();
-  if (!user || !allow.includes(user.role)) {
-    return <Navigate to="/login" replace />;
-  }
-  return <Outlet />;
+export default function RoleGuard({ allow, children }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (!allow.includes(user.role)) return <Navigate to="/" replace />;
+  return children;
 }

@@ -26,7 +26,9 @@ export default function AdminDashboard() {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteBranch, setInviteBranch] = useState("");
-
+  const [inviteWorkType, setInviteWorkType] = useState("OFFICE");
+  const [inviteHome, setInviteHome] = useState("");
+  
   const navigate = useNavigate();
 
   useEffect(() => {
