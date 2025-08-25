@@ -1,15 +1,13 @@
+
 import { useState } from "react";
-import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Card, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
-import { loginApi } from "../api/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const[err ,setErr]=useState("");
+  const [err, setErr] = useState("");
   const navigate = useNavigate();
-  const {Login} = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,31 +25,34 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // Save token + user info
+        // ✅ Save token + user info
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // 🔑 Redirect based on role
-        const role = data.user.role?.toUpperCase(); // normalize case
+        // ✅ Redirect based on role
+        const role = (data.user.role || "").toUpperCase();
+        
+        console.log("User from backend:", data.user);
+        console.log("Role from backend:", data.user.role);
+
 
         if (role === "SUPERADMIN") {
-          // AdminJS backend panel
-          window.location.href = "http://localhost:5000/admin";
+          navigate("/superadmin-dashboard");
         } else if (role === "ADMIN") {
-          // React Admin Dashboard
           navigate("/admin-dashboard");
         } else if (role === "EMPLOYEE") {
-          // React Employee Dashboard
           navigate("/employee-dashboard");
         } else {
           navigate("/");
+          console.log("User role from backend:", data.user.role);
+
         }
       } else {
-        alert(data.message || "Login failed");
+        setErr(data.message || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Something went wrong");
+      setErr("Something went wrong. Please try again.");
     }
   };
 
@@ -76,6 +77,9 @@ export default function Login() {
               <p className="text-center text-light mb-4">
                 Access your personalized dashboard and stay on track
               </p>
+
+              {/* 🔴 Error Message */}
+              {err && <Alert variant="danger">{err}</Alert>}
 
               <Form onSubmit={handleSubmit}>
                 {/* Email */}
@@ -134,3 +138,4 @@ export default function Login() {
     </div>
   );
 }
+
