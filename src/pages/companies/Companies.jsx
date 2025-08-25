@@ -1,13 +1,18 @@
 // src/pages/companies/Companies.jsx
 import { useEffect, useState } from "react";
 import { Button, Table, Modal, Form } from "react-bootstrap";
-import { fetchCompanies, createCompany, updateCompany, deleteCompany } from "../../api/companies";
+import {
+  fetchCompanies,
+  createCompany,
+  updateCompany,
+  deleteCompany,
+} from "../../api/companies";
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
-  const [form, setForm] = useState({ name: "", address: "" });
+  const [form, setForm] = useState({ name: "" });
 
   // Load companies on mount
   useEffect(() => {
@@ -32,7 +37,7 @@ export default function Companies() {
       }
       setShowModal(false);
       setEditingCompany(null);
-      setForm({ name: "", address: "" });
+      setForm({ name: "" });
       loadCompanies();
     } catch (err) {
       console.error("Error saving company:", err);
@@ -41,7 +46,8 @@ export default function Companies() {
 
   const handleEdit = (company) => {
     setEditingCompany(company);
-    setForm({ name: company.name, address: company.address });
+    console.log("company", company.name);
+    setForm({ name: company.name });
     setShowModal(true);
   };
 
@@ -63,7 +69,7 @@ export default function Companies() {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Address</th>
+
             <th>Actions</th>
           </tr>
         </thead>
@@ -71,12 +77,20 @@ export default function Companies() {
           {companies.map((c) => (
             <tr key={c._id}>
               <td>{c.name}</td>
-              <td>{c.address}</td>
+
               <td>
-                <Button variant="warning" size="sm" onClick={() => handleEdit(c)}>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  onClick={() => handleEdit(c)}
+                >
                   Edit
                 </Button>{" "}
-                <Button variant="danger" size="sm" onClick={() => handleDelete(c._id)}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDelete(c._id)}
+                >
                   Delete
                 </Button>
               </td>
@@ -88,7 +102,9 @@ export default function Companies() {
       {/* Modal for Add/Edit */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingCompany ? "Edit Company" : "Add Company"}</Modal.Title>
+          <Modal.Title>
+            {editingCompany ? "Edit Company" : "Add Company"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -98,14 +114,6 @@ export default function Companies() {
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
-              <Form.Control
-                type="text"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
               />
             </Form.Group>
           </Form>

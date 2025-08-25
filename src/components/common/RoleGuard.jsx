@@ -3,7 +3,11 @@ import useAuth from "../../hooks/useAuth";
 
 export default function RoleGuard({ allow, children }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (!allow.includes(user.role)) return <Navigate to="/" replace />;
+  if (user === undefined || user === null) {
+    return <div>Loading...</div>;
+  }
+  if (!allow.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
   return children;
 }

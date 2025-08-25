@@ -12,7 +12,7 @@ import {
   Image,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/client";
+//import api from "../../api/client";
 
 import Companies from "../companies/Companies";
 import Branches from "../branches/Branches";

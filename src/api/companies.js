@@ -1,19 +1,12 @@
-import  api  from "./client";
-
-const API_URL = "http://localhost:5000/api/companies";
+import api from "./client";
 
 export const fetchCompanies = async () => (await api.get("/companies")).data;
-export async function createCompany(company) {
-  const res = await axios.post(API_URL, company);
-  return res.data;
-}
 
-export async function updateCompany(id, company) {
-  const res = await axios.put(`${API_URL}/${id}`, company);
-  return res.data;
-}
+export const createCompany = async (company) =>
+  (await api.post("/companies", company)).data;
 
-export async function deleteCompany(id) {
-  const res = await axios.delete(`${API_URL}/${id}`);
-  return res.data;
-}
+export const updateCompany = async (id, company) =>
+  (await api.put(`/companies/${id}`, company)).data;
+
+export const deleteCompany = async (id) =>
+  (await api.delete(`/companies/${id}`)).data;

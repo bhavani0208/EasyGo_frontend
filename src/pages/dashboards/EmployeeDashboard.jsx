@@ -8,7 +8,13 @@ import {
   Spinner,
   Badge,
 } from "react-bootstrap";
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+} from "react-leaflet";
 import polyline from "polyline";
 import useAuth from "../../hooks/useAuth";
 import { bestRouteForEmployee, notifyRouteForEmployee } from "../../api/routes";
@@ -86,8 +92,7 @@ export default function EmployeeDashboard() {
   return (
     <div className="d-flex" style={{ minHeight: "100vh" }}>
       {/* ✅ Reusable Sidebar */}
-      <Sidebar  />
-      
+      <Sidebar />
 
       <Container fluid className="p-4 bg-light">
         <Row className="mb-4">
@@ -128,7 +133,9 @@ export default function EmployeeDashboard() {
                             <Marker position={polyPoints[0]}>
                               <Popup>Start</Popup>
                             </Marker>
-                            <Marker position={polyPoints[polyPoints.length - 1]}>
+                            <Marker
+                              position={polyPoints[polyPoints.length - 1]}
+                            >
                               <Popup>Office</Popup>
                             </Marker>
                           </>
