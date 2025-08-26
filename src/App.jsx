@@ -6,12 +6,13 @@ import RoleGuard from "./components/common/RoleGuard";
 import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
 import RegisterAdmin from "./pages/auth/RegisterAdmin";
-import AcceptInvite from "./pages/AcceptInvite";
+//import AcceptInvite from "./pages/AcceptInvite";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import EmployeeDashboard from "./pages/dashboards/EmployeeDashboard";
 import SuperadminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import EmployeeRegistrationForm from "./pages/auth/InviteEmployeeForm";
 
 export default function App() {
   return (
@@ -21,8 +22,15 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register-admin" element={<RegisterAdmin />} />
-        <Route path="/accept-invite" element={<AcceptInvite />} />
-
+        {/* <Route path="/accept-invite" element={<AcceptInvite />} /> */}
+        <Route
+          path="/register-employee/:token"
+          element={
+            <div>
+              <EmployeeRegistrationForm />
+            </div>
+          }
+        />
         {/* Protected routes */}
         <Route
           path="/superadmin-dashboard"

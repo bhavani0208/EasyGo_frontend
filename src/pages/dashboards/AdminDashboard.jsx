@@ -1,155 +1,110 @@
+import { useEffect, useState } from "react";
 import {
   Container,
   Row,
   Col,
   Card,
+  Table,
   Button,
+  Modal,
+  Form,
+  Alert,
   Spinner,
   Badge,
   Nav,
   Image,
-  Modal,
-  Form,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import api from "../../api/client";
+import useAuth from "../../hooks/useAuth";
 import Branches from "../branches/Branches";
+import { inviteEmployee } from "../../api/employees";
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const [branches, setBranches] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [branches, setBranches] = useState([]);
 
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteBranch, setInviteBranch] = useState("");
+  // Sidebar navigation section state
+  const [activeSection, setActiveSection] = useState("branches");
 
-  const navigate = useNavigate();
+  // Invite Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    branchId: "",
+    workType: "",
+  });
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSuccess, setInviteSuccess] = useState("");
 
-  // useEffect(() => {
-  //   const storedUser = localStorage.getItem("user");
-  //   if (storedUser) {
-  //     const parsedUser = JSON.parse(storedUser);
-  //     setUser(parsedUser);
-  //   }
-
-  //   const fetchData = async () => {
-  //     try {
-  //       const token = localStorage.getItem("token");
-
-  //       // ✅ Fetch branches for this company
-  //       const branchRes = await api.get("/branches", {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setBranches(branchRes.data);
-
-  //       const empRes = await api.get("/employees", {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setEmployees(empRes.data);
-
-  //       const userRes = await api.get("/auth/me", {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setUser(userRes.data);
-  //       localStorage.setItem("user", JSON.stringify(userRes.data));
-  //     } catch (err) {
-  //       console.error("Error fetching admin data", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchData();
-  // }, []);
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-    }
-
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        let branchesData = [];
-        if (user?.role === "ADMIN") {
-          const companyId = user.companyId || user.company?._id;
-          if (companyId) {
-            const branchRes = await api.get(`/branches/company/${companyId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            branchesData = branchRes.data;
-          }
-        } else {
-          const branchRes = await api.get("/branches", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          branchesData = branchRes.data;
-        }
-        setBranches(branchesData);
-
-        const empRes = await api.get("/employees", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEmployees(empRes.data);
-
-        const userRes = await api.get("/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(userRes.data);
-        localStorage.setItem("user", JSON.stringify(userRes.data));
-      } catch (err) {
-        console.error("Error fetching admin data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const handleInvite = async (e) => {
-    // e.preventDefault();
-    // try {
-    //   const token = localStorage.getItem("token");
-    //   await api.post(
-    //     "/employees/invite",
-    //     { email: inviteEmail, branchId: inviteBranch },
-    //     { headers: { Authorization: `Bearer ${token}` } }
-    //   );
-    //   alert("Invitation sent successfully!");
-    //   setShowInvite(false);
-    //   setInviteEmail("");
-    //   setInviteBranch("");
-    // } catch (err) {
-    //   console.error("Error sending invite", err);
-    //   alert("Failed to send invitation.");
-    // }
+  // Fetch branches filtered for this admin's company
+  const fetchBranchesForCompany = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const companyId = user.companyId || user.company?._id;
-      if (!companyId) {
-        alert("No companyId found for this ADMIN user");
-        return;
+      if (user?.companyId) {
+        const res = await api.get(`/branches/company/${user.companyId}`);
+        setBranches(res.data || []);
       }
-      if (companyId) {
-        const branchRes = await api.get(`/branches/company/${companyId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBranches(branchRes.data);
-      }
-
-      setShowInvite(true);
     } catch (err) {
-      console.error("Error fetching branches for invite", err);
+      console.error("Error fetching branches", err);
+      setBranches([]);
+    }
+  };
+
+  // Fetch employees filtered for this admin's company
+  const fetchEmployeesForCompany = async () => {
+    try {
+      if (user?.companyId) {
+        const res = await api.get(`/employees/company/${user.companyId}`);
+        setEmployees(res.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching employees", err);
+      setEmployees([]);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchBranchesForCompany(),
+      fetchEmployeesForCompany(),
+    ]).finally(() => setLoading(false));
+  }, [user]);
+
+  // Refresh branches whenever modal opens
+  const handleShowInviteModal = async () => {
+    await fetchBranchesForCompany();
+    setShowInviteModal(true);
+    setInviteError("");
+    setInviteSuccess("");
+    setInviteForm({ email: "", branchId: "" });
+  };
+
+  // Invite handler
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setInviteLoading(true);
+    setInviteError("");
+    setInviteSuccess("");
+    try {
+      await inviteEmployee(inviteForm);
+      setInviteSuccess("Invite sent successfully!");
+      setShowInviteModal(false);
+      setInviteForm({ email: "", branchId: "", workType: "" });
+      fetchEmployeesForCompany();
+    } catch (err) {
+      setInviteError(err.response?.data?.message || "Failed to send invite");
+    } finally {
+      setInviteLoading(false);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    window.location.href = "/login";
   };
 
   if (loading) {
@@ -191,26 +146,26 @@ export default function AdminDashboard() {
               </Badge>
             </div>
           </div>
-
           <Nav className="flex-column gap-2">
-            <Nav.Link href="#dashboard" className="text-white">
-              📊 Dashboard
-            </Nav.Link>
-            <Nav.Link href="#branches" className="text-white">
+            <Nav.Link
+              onClick={() => setActiveSection("branches")}
+              className={`text-white ${
+                activeSection === "branches" ? "fw-semibold" : ""
+              }`}
+            >
               🏢 Manage Branches
             </Nav.Link>
-            <Nav.Link href="#employees" className="text-white">
+            <Nav.Link
+              onClick={() => setActiveSection("employees")}
+              className={`text-white ${
+                activeSection === "employees" ? "fw-semibold" : ""
+              }`}
+            >
               👥 Manage Employees
             </Nav.Link>
-            <Nav.Link href="#reports" className="text-white">
-              📑 Reports
-            </Nav.Link>
-            <Nav.Link href="#settings" className="text-white">
-              ⚙️ Settings
-            </Nav.Link>
+            {/* You can add further section navigation similarly */}
           </Nav>
         </div>
-
         <Button variant="outline-light" className="mt-4" onClick={handleLogout}>
           🚪 Logout
         </Button>
@@ -229,75 +184,76 @@ export default function AdminDashboard() {
           </Col>
         </Row>
 
-        {/* ✅ Use Branches Component here */}
-        <Row id="branches" className="mb-4">
-          <Col>
-            <Card className="shadow-sm border-0">
-              <Card.Body>
-                <Branches user={user} branches={branches} />
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+        {activeSection === "branches" && (
+          <Row id="branches" className="mb-4">
+            <Col>
+              <Card className="shadow-sm border-0">
+                <Card.Body>
+                  {/* Branches component: pass branches and user props as needed */}
+                  <Branches user={user} branches={branches} />
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
 
-        {/* Employees Section */}
-        <Row id="employees">
-          <Col>
-            <Card className="shadow-sm border-0">
-              <Card.Header className="d-flex justify-content-between align-items-center bg-success text-white">
-                <h5 className="mb-0">👥 Employees</h5>
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={() => setShowInvite(true)}
-                >
-                  + Invite Employee
-                </Button>
-              </Card.Header>
-              <Card.Body>
-                {employees.length === 0 ? (
-                  <p className="text-muted">No employees registered</p>
-                ) : (
-                  <Table hover responsive className="align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Work Type</th>
-                        <th>Branch</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employees.map((e) => (
-                        <tr key={e._id}>
-                          <td className="fw-semibold">{e.name || "—"}</td>
-                          <td>{e.email}</td>
-                          <td>{e.workType || "—"}</td>
-                          <td>{e.branch?.name || "—"}</td>
-                          <td>
-                            <Badge
-                              bg={
-                                e.status === "Active" ? "success" : "secondary"
-                              }
-                            >
-                              {e.status || "Active"}
-                            </Badge>
-                          </td>
+        {activeSection === "employees" && (
+          <Row id="employees">
+            <Col>
+              <Card className="shadow-sm border-0">
+                <Card.Header className="d-flex justify-content-between align-items-center bg-success text-white">
+                  <h5 className="mb-0">👥 Employees</h5>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={handleShowInviteModal}
+                  >
+                    + Invite Employee
+                  </Button>
+                </Card.Header>
+                <Card.Body>
+                  {inviteError && <Alert variant="danger">{inviteError}</Alert>}
+                  {inviteSuccess && (
+                    <Alert variant="success">{inviteSuccess}</Alert>
+                  )}
+                  {employees.length === 0 ? (
+                    <p className="text-muted">No employees registered</p>
+                  ) : (
+                    <Table bordered hover responsive>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Branch</th>
+                          <th>Work Type</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+                      </thead>
+                      <tbody>
+                        {employees.map((emp) => (
+                          <tr key={emp._id}>
+                            <td>{emp.name}</td>
+                            <td>{emp.email}</td>
+                            <td>{emp.branch?.name || "—"}</td>
+                            <td>{emp.workType || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
 
-        {/* Invite Modal */}
-        <Modal show={showInvite} onHide={() => setShowInvite(false)} centered>
+        {/* Invite Employee Modal */}
+        <Modal
+          show={showInviteModal}
+          onHide={() => setShowInviteModal(false)}
+          centered
+        >
           <Modal.Header closeButton>
-            <Modal.Title>📧 Invite Employee</Modal.Title>
+            <Modal.Title>Invite Employee</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form onSubmit={handleInvite}>
@@ -306,31 +262,57 @@ export default function AdminDashboard() {
                 <Form.Control
                   type="email"
                   placeholder="Enter employee email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
+                  value={inviteForm.email}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, email: e.target.value })
+                  }
                   required
                 />
               </Form.Group>
+
               <Form.Group className="mb-3" controlId="inviteBranch">
                 <Form.Label>Branch</Form.Label>
                 <Form.Select
-                  value={inviteBranch}
-                  onChange={(e) => setInviteBranch(e.target.value)}
+                  value={inviteForm.branchId}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, branchId: e.target.value })
+                  }
                   required
                 >
-                  <option value="">Select branch</option>
-                  {branches.map((b) => (
-                    <option key={b._id} value={b._id}>
-                      {b.name}
+                  <option value="">-- Select Branch --</option>
+                  {branches.map((branch) => (
+                    <option key={branch._id} value={branch._id}>
+                      {branch.name}
                     </option>
                   ))}
-
-                  {/* Branch options come from Branches component state, we could lift state up if needed */}
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="inviteWorkType">
+                <Form.Label>Work Type</Form.Label>
+                <Form.Select
+                  value={inviteForm.workType}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, workType: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">-- Select Work Type --</option>
+                  <option value="HYBRID">Hybrid</option>
+                  <option value="OFFICE">Office</option>
+                  <option value="REMOTE">Remote</option>
                 </Form.Select>
               </Form.Group>
               <div className="d-grid">
-                <Button type="submit" variant="success">
-                  Send Invite
+                <Button
+                  type="submit"
+                  variant="success"
+                  disabled={inviteLoading}
+                >
+                  {inviteLoading ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    "Send Invite"
+                  )}
                 </Button>
               </div>
             </Form>

@@ -1,4 +1,4 @@
-import api  from "./client";
+import api from "./client";
 
 export const fetchEmployeesByBranch = async (branchId) =>
   (await api.get(`/employees/branch/${branchId}`)).data;
@@ -16,3 +16,7 @@ export const updateEmployee = async (id, payload) =>
 
 export const inviteEmployee = async (payload) =>
   (await api.post("/employees/invite", payload)).data;
+
+export const acceptInvitation = async (formData, token) => {
+  return api.post(`/employees/register/${token}`, formData);
+};
