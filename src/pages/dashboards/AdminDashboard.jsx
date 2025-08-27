@@ -17,6 +17,7 @@ import {
 import api from "../../api/client";
 import useAuth from "../../hooks/useAuth";
 import Branches from "../branches/Branches";
+import employees from "../employees/Employees";
 import { inviteEmployee } from "../../api/employees";
 
 export default function AdminDashboard() {
@@ -56,7 +57,7 @@ export default function AdminDashboard() {
   const fetchEmployeesForCompany = async () => {
     try {
       if (user?.companyId) {
-        const res = await api.get(`/employees/company/${user.companyId}`);
+        const res = await api.get(`/employees/branch/${user.companyId}`);
         setEmployees(res.data || []);
       }
     } catch (err) {
