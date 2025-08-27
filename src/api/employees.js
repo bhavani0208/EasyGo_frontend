@@ -14,6 +14,9 @@ export const fetchMyEmployee = async () =>
 export const updateEmployee = async (id, payload) =>
   (await api.put(`/employees/${id}`, payload)).data;
 
+export const fetchEmployeesByCompany = async (companyId) =>
+  (await api.get(`/employees/company/${companyId}`)).data;
+
 export const inviteEmployee = async (payload) =>
   (await api.post("/employees/invite", payload)).data;
 
