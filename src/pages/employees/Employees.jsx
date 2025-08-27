@@ -1,13 +1,19 @@
-// // src/pages/employees/Employees.jsx
 // import { useEffect, useState } from "react";
-// import api from "../../api/client";
+// import {
+//   fetchEmployeesByBranch,
+//   deleteEmployee,
+//   updateEmployee,
+//   fetchMyEmployee,
+//   fetchEmployeesByCompany,
+// } from "../../api/employees";
 // import { Button, Table, Modal, Form } from "react-bootstrap";
 
-// const Employees = () => {
+// const Employees = ({ companyId, branches }) => {
 //   const [employees, setEmployees] = useState([]);
-//   const [branches, setBranches] = useState([]);
 //   const [showModal, setShowModal] = useState(false);
 //   const [modalType, setModalType] = useState("add");
+//   const [selectedBranch, setSelectedBranch] = useState("");
+
 //   const [currentEmployee, setCurrentEmployee] = useState({
 //     name: "",
 //     email: "",
@@ -15,34 +21,31 @@
 //     branchId: "",
 //   });
 
-//   // Fetch employees
-//   const fetchEmployees = async () => {
-//     try {
-//       const { data } = await api.get("/employees");
-//       setEmployees(data);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   // Fetch branches for dropdown
-//   const fetchBranches = async () => {
-//     try {
-//       const { data } = await api.get("/branches");
-//       setBranches(data);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
 //   useEffect(() => {
+//     const fetchEmployees = async () => {
+//       try {
+//         let data;
+//         if (selectedBranch) {
+//           data = await fetchEmployeesByBranch(selectedBranch);
+//         } else if (companyId) {
+//           data = await fetchEmployeesByCompany(companyId);
+//         }
+//         setEmployees(data || []);
+//       } catch (err) {
+//         setEmployees([]);
+//       }
+//     };
 //     fetchEmployees();
-//     fetchBranches();
-//   }, []);
+//   }, [companyId, selectedBranch]);
 
 //   const handleShowAdd = () => {
 //     setModalType("add");
-//     setCurrentEmployee({ name: "", email: "", role: "EMPLOYEE", branchId: "" });
+//     setCurrentEmployee({
+//       name: "",
+//       email: "",
+//       role: "EMPLOYEE",
+//       branchId: "",
+//     });
 //     setShowModal(true);
 //   };
 
@@ -57,33 +60,51 @@
 
 //   const handleDelete = async (id) => {
 //     if (!window.confirm("Are you sure?")) return;
-//     try {
-//       await api.delete(`/employees/${id}`);
-//       fetchEmployees();
-//     } catch (err) {
-//       console.error(err);
+//     await deleteEmployee(id);
+//     // Refresh after delete
+//     if (selectedBranch) {
+//       setEmployees(await fetchEmployeesByBranch(selectedBranch));
+//     } else if (companyId) {
+//       setEmployees(await fetchEmployeesByCompany(companyId));
 //     }
 //   };
 
 //   const handleSave = async () => {
-//     try {
-//       if (modalType === "add") {
-//         await api.post("/employees", currentEmployee);
-//       } else {
-//         await api.put(`/employees/${currentEmployee._id}`, currentEmployee);
-//       }
-//       setShowModal(false);
-//       fetchEmployees();
-//     } catch (err) {
-//       console.error(err);
+//     if (modalType === "add") {
+//       // If you want to allow admin to add directly, implement here
+//       // await addEmployee(currentEmployee);
+//     } else {
+//       await updateEmployee(currentEmployee._id, currentEmployee);
+//     }
+//     setShowModal(false);
+//     if (selectedBranch) {
+//       setEmployees(await fetchEmployeesByBranch(selectedBranch));
+//     } else if (companyId) {
+//       setEmployees(await fetchEmployeesByCompany(companyId));
 //     }
 //   };
 
 //   return (
 //     <div>
-//       <h3>Employees</h3>
-//       <Button onClick={handleShowAdd}>+ Add Employee</Button>
-//       <Table striped bordered hover className="mt-3">
+//       <div className="d-flex justify-content-between align-items-center mb-3">
+//         <h4>👥 Employees</h4>
+//         <Button onClick={handleShowAdd}>+ Add Employee</Button>
+//       </div>
+//       <Form.Group className="mb-3" controlId="branchFilter">
+//         <Form.Label>Filter by Branch</Form.Label>
+//         <Form.Select
+//           value={selectedBranch}
+//           onChange={(e) => setSelectedBranch(e.target.value)}
+//         >
+//           <option value="">-- All Branches --</option>
+//           {branches.map((branch) => (
+//             <option key={branch._id} value={branch._id}>
+//               {branch.name}
+//             </option>
+//           ))}
+//         </Form.Select>
+//       </Form.Group>
+//       <Table striped bordered hover responsive>
 //         <thead>
 //           <tr>
 //             <th>Name</th>
@@ -136,7 +157,10 @@
 //                 type="text"
 //                 value={currentEmployee.name}
 //                 onChange={(e) =>
-//                   setCurrentEmployee({ ...currentEmployee, name: e.target.value })
+//                   setCurrentEmployee({
+//                     ...currentEmployee,
+//                     name: e.target.value,
+//                   })
 //                 }
 //               />
 //             </Form.Group>
@@ -160,7 +184,10 @@
 //               <Form.Select
 //                 value={currentEmployee.role}
 //                 onChange={(e) =>
-//                   setCurrentEmployee({ ...currentEmployee, role: e.target.value })
+//                   setCurrentEmployee({
+//                     ...currentEmployee,
+//                     role: e.target.value,
+//                   })
 //                 }
 //               >
 //                 <option value="EMPLOYEE">Employee</option>
@@ -204,14 +231,31 @@
 
 // export default Employees;
 import { useEffect, useState } from "react";
-import api from "../../api/client";
-import { Button, Table, Modal, Form } from "react-bootstrap";
+import {
+  fetchEmployeesByBranch,
+  deleteEmployee,
+  updateEmployee,
+  fetchEmployeesByCompany,
+  inviteEmployee,
+} from "../../api/employees";
+import { Button, Table, Modal, Form, Alert } from "react-bootstrap";
 
-const Employees = () => {
+const Employees = ({ companyId, branches }) => {
   const [employees, setEmployees] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("add");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [inviteModal, setInviteModal] = useState(false);
+
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    branchId: "",
+    workType: "",
+  });
+  const [inviteSuccess, setInviteSuccess] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+
   const [currentEmployee, setCurrentEmployee] = useState({
     name: "",
     email: "",
@@ -219,34 +263,24 @@ const Employees = () => {
     branchId: "",
   });
 
-  const fetchEmployees = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const { data } = await api.get("/employees", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEmployees(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchBranches = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const { data } = await api.get("/branches", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setBranches(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  // Fetch employees by selected branch/company
   useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        let data;
+        if (selectedBranch) {
+          data = await fetchEmployeesByBranch(selectedBranch);
+        } else if (companyId) {
+          data = await fetchEmployeesByCompany(companyId);
+        }
+        console.log("employees from api", data);
+        setEmployees(data || []);
+      } catch (err) {
+        setEmployees([]);
+      }
+    };
     fetchEmployees();
-    fetchBranches();
-  }, []);
+  }, [companyId, selectedBranch, inviteSuccess]); // refresh list after invite
 
   const handleShowAdd = () => {
     setModalType("add");
@@ -270,42 +304,68 @@ const Employees = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await api.delete(`/employees/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchEmployees();
-    } catch (err) {
-      console.error(err);
+    await deleteEmployee(id);
+    // Refresh after delete
+    if (selectedBranch) {
+      setEmployees(await fetchEmployeesByBranch(selectedBranch));
+    } else if (companyId) {
+      setEmployees(await fetchEmployeesByCompany(companyId));
     }
   };
 
   const handleSave = async () => {
+    if (modalType === "edit") {
+      await updateEmployee(currentEmployee._id, currentEmployee);
+    }
+    setShowModal(false);
+    if (selectedBranch) {
+      setEmployees(await fetchEmployeesByBranch(selectedBranch));
+    } else if (companyId) {
+      setEmployees(await fetchEmployeesByCompany(companyId));
+    }
+  };
+
+  // Invite Employee Handler
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setInviteLoading(true);
+    setInviteError("");
+    setInviteSuccess("");
     try {
-      const token = localStorage.getItem("token");
-      if (modalType === "add") {
-        await api.post("/employees", currentEmployee, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        await api.put(`/employees/${currentEmployee._id}`, currentEmployee, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-      setShowModal(false);
-      fetchEmployees();
+      await inviteEmployee(inviteForm);
+      setInviteSuccess("Invite sent successfully!");
+      setInviteModal(false);
+      setInviteForm({ email: "", branchId: "", workType: "" });
     } catch (err) {
-      console.error(err);
+      setInviteError(err.response?.data?.message || "Failed to send invite");
+    } finally {
+      setInviteLoading(false);
     }
   };
 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>👥 Employees</h4>
-        <Button onClick={handleShowAdd}>+ Add Employee</Button>
+        <h5>Employees</h5>
+        <Button variant="primary" onClick={() => setInviteModal(true)}>
+          + Invite Employee
+        </Button>
       </div>
+
+      <Form.Group className="mb-3" controlId="branchFilter">
+        <Form.Label>Filter by Branch</Form.Label>
+        <Form.Select
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+        >
+          <option value="">-- All Branches --</option>
+          {branches.map((branch) => (
+            <option key={branch._id} value={branch._id}>
+              {branch.name}
+            </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
 
       <Table striped bordered hover responsive>
         <thead>
@@ -318,34 +378,42 @@ const Employees = () => {
           </tr>
         </thead>
         <tbody>
-          {employees.map((emp) => (
-            <tr key={emp._id}>
-              <td>{emp.name}</td>
-              <td>{emp.email}</td>
-              <td>{emp.role}</td>
-              <td>{emp.branch?.name}</td>
-              <td>
-                <Button
-                  variant="warning"
-                  size="sm"
-                  onClick={() => handleShowEdit(emp)}
-                >
-                  Edit
-                </Button>{" "}
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDelete(emp._id)}
-                >
-                  Delete
-                </Button>
+          {employees.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="text-center text-muted">
+                No employees registered
               </td>
             </tr>
-          ))}
+          ) : (
+            employees.map((emp) => (
+              <tr key={emp._id}>
+                <td>{emp.name}</td>
+                <td>{emp.email}</td>
+                <td>{emp.role}</td>
+                <td>{emp.branch?.name || ""}</td>
+                <td>
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={() => handleShowEdit(emp)}
+                  >
+                    Edit
+                  </Button>{" "}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDelete(emp._id)}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </Table>
 
-      {/* Modal */}
+      {/* Edit/Add Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -367,7 +435,6 @@ const Employees = () => {
                 }
               />
             </Form.Group>
-
             <Form.Group className="mt-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -381,7 +448,6 @@ const Employees = () => {
                 }
               />
             </Form.Group>
-
             <Form.Group className="mt-3">
               <Form.Label>Role</Form.Label>
               <Form.Select
@@ -397,7 +463,6 @@ const Employees = () => {
                 <option value="ADMIN">Admin</option>
               </Form.Select>
             </Form.Group>
-
             <Form.Group className="mt-3">
               <Form.Label>Branch</Form.Label>
               <Form.Select
@@ -427,6 +492,76 @@ const Employees = () => {
             Save
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Invite Modal */}
+      <Modal show={inviteModal} onHide={() => setInviteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Invite Employee</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleInvite}>
+            <Form.Group className="mb-3" controlId="inviteEmail">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Enter employee email"
+                value={inviteForm.email}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, email: e.target.value })
+                }
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="inviteBranch">
+              <Form.Label>Branch</Form.Label>
+              <Form.Select
+                value={inviteForm.branchId}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, branchId: e.target.value })
+                }
+                required
+              >
+                <option value="">-- Select Branch --</option>
+                {branches.map((branch) => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="inviteWorkType">
+              <Form.Label>Work Type</Form.Label>
+              <Form.Select
+                value={inviteForm.workType}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, workType: e.target.value })
+                }
+                required
+              >
+                <option value="">-- Select Work Type --</option>
+                <option value="HYBRID">Hybrid</option>
+                <option value="OFFICE">Office</option>
+                <option value="REMOTE">Remote</option>
+              </Form.Select>
+            </Form.Group>
+            <div className="d-grid">
+              <Button type="submit" variant="success" disabled={inviteLoading}>
+                {inviteLoading ? "Sending..." : "Send Invite"}
+              </Button>
+            </div>
+            {inviteError && (
+              <Alert variant="danger" className="mt-2">
+                {inviteError}
+              </Alert>
+            )}
+            {inviteSuccess && (
+              <Alert variant="success" className="mt-2">
+                {inviteSuccess}
+              </Alert>
+            )}
+          </Form>
+        </Modal.Body>
       </Modal>
     </div>
   );

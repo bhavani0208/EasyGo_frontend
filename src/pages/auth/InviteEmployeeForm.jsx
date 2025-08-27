@@ -144,7 +144,6 @@ import {
   Alert,
   Spinner,
 } from "react-bootstrap";
-import api from "../../api/client";
 import { acceptInvitation } from "../../api/employees";
 
 export default function EmployeeRegistrationForm() {
