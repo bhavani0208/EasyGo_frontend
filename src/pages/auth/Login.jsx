@@ -47,7 +47,7 @@
 //         } else if (role === "ADMIN") {
 //           navigate("/admin-dashboard");
 //         } else if (role === "EMPLOYEE") {
-//           navigate("/employee-dashboard");
+//           navigate("/-dashboard");
 //         } else {
 //           navigate("/");
 //           console.log("User role from backend:", data.user.role);

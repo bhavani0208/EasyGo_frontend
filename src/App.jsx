@@ -24,7 +24,7 @@ export default function App() {
         <Route path="/register-admin" element={<RegisterAdmin />} />
         {/* <Route path="/accept-invite" element={<AcceptInvite />} /> */}
         <Route
-          path="/register-employee/:token"
+          path="/register-employees/:token"
           element={
             <div>
               <EmployeeRegistrationForm />
