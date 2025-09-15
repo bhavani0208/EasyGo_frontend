@@ -13,15 +13,18 @@ import SuperadminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import EmployeeRegistrationForm from "./pages/auth/InviteEmployeeForm";
-
+import EditProfile from "./pages/employees/EditProfile";
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register-admin" element={<RegisterAdmin />} />
+
+        <Route path="/employee/profile/:id" element={<EditProfile />} />
         {/* <Route path="/accept-invite" element={<AcceptInvite />} /> */}
         <Route
           path="/register-employees/:token"
