@@ -1,3 +1,200 @@
+// // import { useState, useEffect, useCallback, useMemo } from "react";
+// // import {
+// //   Container,
+// //   Row,
+// //   Col,
+// //   Card,
+// //   Button,
+// //   Spinner,
+// //   Badge,
+// // } from "react-bootstrap";
+// // import {
+// //   MapContainer,
+// //   TileLayer,
+// //   Marker,
+// //   Polyline,
+// //   Popup,
+// // } from "react-leaflet";
+// // import polyline from "polyline";
+// // import useAuth from "../../hooks/useAuth";
+// // import { bestRouteForEmployee, notifyRouteForEmployee } from "../../api/routes";
+// // import api from "../../api/client";
+// // import Sidebar from "../../components/Sidebar";
+
+// // export default function EmployeeDashboard() {
+// //   const { user } = useAuth();
+// //   const [employee, setEmployee] = useState(null);
+// //   const [route, setRoute] = useState(null);
+// //   const [loading, setLoading] = useState(false);
+
+// //   // ✅ Fetch employee profile
+// //   const fetchMyEmployee = useCallback(async () => {
+// //     const res = await api.get(`/employees/user/${user._id}`);
+// //     return res.data;
+// //   }, [user]);
+
+// //   useEffect(() => {
+// //     (async () => {
+// //       try {
+// //         const me = await fetchMyEmployee();
+// //         setEmployee(me);
+// //       } catch (e) {
+// //         console.error(e);
+// //       }
+// //     })();
+// //   }, [fetchMyEmployee]);
+
+// //   // ✅ Best route API
+// //   const getBestRoute = async () => {
+// //     if (!employee?._id) return;
+// //     setLoading(true);
+// //     try {
+// //       const data = await bestRouteForEmployee(employee._id, "driving-car");
+// //       setRoute(data);
+// //     } catch (e) {
+// //       alert(e?.response?.data?.message || "Failed to fetch route");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   };
+// //   const handleLogout = () => {
+// //     localStorage.removeItem("token");
+// //     localStorage.removeItem("user");
+// //     navigate("/login");
+// //   };
+
+// //   // ✅ Notify API
+// //   const notifyMe = async () => {
+// //     if (!employee?._id) return;
+// //     try {
+// //       await notifyRouteForEmployee(employee._id, "driving-car");
+// //       alert("You will see a ROUTE_UPDATE notification.");
+// //     } catch {
+// //       alert("Failed to notify");
+// //     }
+// //   };
+
+// //   // ✅ Decode polyline
+// //   const polyPoints = useMemo(() => {
+// //     if (!route?.geometry) return [];
+// //     try {
+// //       const pts = polyline.decode(route.geometry);
+// //       return pts.map(([lat, lng]) => [lat, lng]);
+// //     } catch {
+// //       return [];
+// //     }
+// //   }, [route]);
+
+// //   const center = polyPoints.length
+// //     ? polyPoints[Math.floor(polyPoints.length / 2)]
+// //     : [17.385, 78.486]; // fallback: Hyderabad
+
+// //   return (
+// //     <div className="d-flex" style={{ minHeight: "100vh" }}>
+// //       {/* ✅ Reusable Sidebar */}
+// //       <Sidebar />
+
+// //       <Container fluid className="p-4 bg-light">
+// //         <Row className="mb-4">
+// //           <Col>
+// //             <h2 className="fw-bold">Welcome, {employee?.name} 👋</h2>
+// //             <p className="text-muted mb-0">{employee?.email}</p>
+// //           </Col>
+// //         </Row>
+
+// //         <Row>
+// //           {/* ✅ Route Card */}
+// //           <Col md={8} className="mb-4">
+// //             <Card className="shadow-sm border-0 rounded-4">
+// //               <Card.Header className="bg-primary text-white">
+// //                 <h5 className="mb-0">🚦 My Route</h5>
+// //               </Card.Header>
+// //               <Card.Body>
+// //                 {loading ? (
+// //                   <div className="text-center p-5">
+// //                     <Spinner animation="border" /> Fetching best route...
+// //                   </div>
+// //                 ) : route ? (
+// //                   <>
+// //                     <p>
+// //                       Distance: <strong>{route.distanceKm} km</strong> | Time:{" "}
+// //                       <strong>{route.durationMin} min</strong>
+// //                     </p>
+// //                     <div style={{ height: 480 }}>
+// //                       <MapContainer
+// //                         center={center}
+// //                         zoom={12}
+// //                         style={{ height: "100%", width: "100%" }}
+// //                       >
+// //                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+// //                         {polyPoints.length > 0 && (
+// //                           <>
+// //                             <Polyline positions={polyPoints} />
+// //                             <Marker position={polyPoints[0]}>
+// //                               <Popup>Start</Popup>
+// //                             </Marker>
+// //                             <Marker
+// //                               position={polyPoints[polyPoints.length - 1]}
+// //                             >
+// //                               <Popup>Office</Popup>
+// //                             </Marker>
+// //                           </>
+// //                         )}
+// //                       </MapContainer>
+// //                     </div>
+// //                   </>
+// //                 ) : (
+// //                   <div className="text-muted">
+// //                     Click <strong>“Get Best Route”</strong> to see directions.
+// //                   </div>
+// //                 )}
+// //               </Card.Body>
+// //             </Card>
+// //           </Col>
+
+// //           {/* ✅ Info Card */}
+// //           <Col md={4}>
+// //             <Card className="shadow-sm border-0 rounded-4">
+// //               <Card.Header className="bg-success text-white">
+// //                 <h5 className="mb-0">👤 My Info</h5>
+// //               </Card.Header>
+// //               <Card.Body>
+// //                 <p>
+// //                   <strong>Name:</strong> {employee?.name}
+// //                 </p>
+// //                 <p>
+// //                   <strong>Email:</strong> {employee?.email}
+// //                 </p>
+// //                 <p>
+// //                   <strong>Work Mode:</strong>{" "}
+// //                   <Badge bg="info">{employee?.workMode || "N/A"}</Badge>
+// //                 </p>
+// //                 <p>
+// //                   <strong>Office Hours:</strong>{" "}
+// //                   {employee?.officeStartTime || "-"} —{" "}
+// //                   {employee?.officeEndTime || "-"}
+// //                 </p>
+
+// //                 <div className="mt-3 d-flex gap-2">
+// //                   <Button
+// //                     variant="primary"
+// //                     onClick={getBestRoute}
+// //                     disabled={loading}
+// //                   >
+// //                     Get Best Route
+// //                   </Button>
+// //                   <Button variant="outline-secondary" onClick={notifyMe}>
+// //                     Notify Me
+// //                   </Button>
+// //                 </div>
+// //               </Card.Body>
+// //             </Card>
+// //           </Col>
+// //         </Row>
+// //       </Container>
+// //     </div>
+// //   );
+// // }
 // import { useState, useEffect, useCallback, useMemo } from "react";
 // import {
 //   Container,
@@ -7,6 +204,7 @@
 //   Button,
 //   Spinner,
 //   Badge,
+//   Dropdown,
 // } from "react-bootstrap";
 // import {
 //   MapContainer,
@@ -16,6 +214,7 @@
 //   Popup,
 // } from "react-leaflet";
 // import polyline from "polyline";
+// import { useNavigate } from "react-router-dom"; // 👈 for navigation
 // import useAuth from "../../hooks/useAuth";
 // import { bestRouteForEmployee, notifyRouteForEmployee } from "../../api/routes";
 // import api from "../../api/client";
@@ -23,6 +222,8 @@
 
 // export default function EmployeeDashboard() {
 //   const { user } = useAuth();
+//   const navigate = useNavigate(); // 👈 hook for navigation
+
 //   const [employee, setEmployee] = useState(null);
 //   const [route, setRoute] = useState(null);
 //   const [loading, setLoading] = useState(false);
@@ -57,11 +258,18 @@
 //       setLoading(false);
 //     }
 //   };
+
+//   // ✅ Logout
 //   const handleLogout = () => {
 //     localStorage.removeItem("token");
 //     localStorage.removeItem("user");
 //     navigate("/login");
 //   };
+
+//   // ✅ Go to Edit Profile
+//   // const handleProfile = () => {
+//   //   navigate(`/employee/profile/${employee?._id}`);
+//   // };
 
 //   // ✅ Notify API
 //   const notifyMe = async () => {
@@ -96,9 +304,26 @@
 
 //       <Container fluid className="p-4 bg-light">
 //         <Row className="mb-4">
-//           <Col>
-//             <h2 className="fw-bold">Welcome, {employee?.name} 👋</h2>
-//             <p className="text-muted mb-0">{employee?.email}</p>
+//           <Col className="d-flex justify-content-between align-items-center">
+//             <div>
+//               <h2 className="fw-bold">Welcome, {employee?.name} 👋</h2>
+//               <p className="text-muted mb-0">{employee?.email}</p>
+//             </div>
+
+//             {/* ✅ Profile + Logout */}
+//             <Dropdown>
+//               <Dropdown.Toggle variant="outline-dark" id="profile-dropdown">
+//                 {employee?.name || "Profile"}
+//               </Dropdown.Toggle>
+
+//               <Dropdown.Menu>
+//                 {/* <Dropdown.Item onClick={handleProfile}>
+//                   Edit Profile
+//                 </Dropdown.Item> */}
+//                 <Dropdown.Divider />
+//                 <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+//               </Dropdown.Menu>
+//             </Dropdown>
 //           </Col>
 //         </Row>
 
@@ -195,6 +420,7 @@
 //     </div>
 //   );
 // }
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Container,
@@ -205,6 +431,9 @@ import {
   Spinner,
   Badge,
   Dropdown,
+  Form,
+  ListGroup,
+  Alert,
 } from "react-bootstrap";
 import {
   MapContainer,
@@ -214,7 +443,7 @@ import {
   Popup,
 } from "react-leaflet";
 import polyline from "polyline";
-import { useNavigate } from "react-router-dom"; // 👈 for navigation
+import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { bestRouteForEmployee, notifyRouteForEmployee } from "../../api/routes";
 import api from "../../api/client";
@@ -222,11 +451,13 @@ import Sidebar from "../../components/Sidebar";
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate(); // 👈 hook for navigation
+  const navigate = useNavigate();
 
   const [employee, setEmployee] = useState(null);
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [transportMode, setTransportMode] = useState("driving-car"); // default
+  const [error, setError] = useState(null);
 
   // ✅ Fetch employee profile
   const fetchMyEmployee = useCallback(async () => {
@@ -249,11 +480,13 @@ export default function EmployeeDashboard() {
   const getBestRoute = async () => {
     if (!employee?._id) return;
     setLoading(true);
+    setError(null);
     try {
-      const data = await bestRouteForEmployee(employee._id, "driving-car");
+      const data = await bestRouteForEmployee(employee._id, transportMode);
       setRoute(data);
     } catch (e) {
-      alert(e?.response?.data?.message || "Failed to fetch route");
+      console.error(e);
+      setError(e?.response?.data?.message || "Failed to fetch route");
     } finally {
       setLoading(false);
     }
@@ -266,16 +499,11 @@ export default function EmployeeDashboard() {
     navigate("/login");
   };
 
-  // ✅ Go to Edit Profile
-  const handleProfile = () => {
-    navigate(`/employee/profile/${employee?._id}`);
-  };
-
   // ✅ Notify API
   const notifyMe = async () => {
     if (!employee?._id) return;
     try {
-      await notifyRouteForEmployee(employee._id, "driving-car");
+      await notifyRouteForEmployee(employee._id, transportMode);
       alert("You will see a ROUTE_UPDATE notification.");
     } catch {
       alert("Failed to notify");
@@ -299,10 +527,11 @@ export default function EmployeeDashboard() {
 
   return (
     <div className="d-flex" style={{ minHeight: "100vh" }}>
-      {/* ✅ Reusable Sidebar */}
+      {/* Sidebar */}
       <Sidebar />
 
       <Container fluid className="p-4 bg-light">
+        {/* Header */}
         <Row className="mb-4">
           <Col className="d-flex justify-content-between align-items-center">
             <div>
@@ -310,16 +539,11 @@ export default function EmployeeDashboard() {
               <p className="text-muted mb-0">{employee?.email}</p>
             </div>
 
-            {/* ✅ Profile + Logout */}
             <Dropdown>
-              {/* <Dropdown.Toggle variant="outline-dark" id="profile-dropdown">
+              <Dropdown.Toggle variant="outline-dark" id="profile-dropdown">
                 {employee?.name || "Profile"}
-              </Dropdown.Toggle> */}
-
+              </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item onClick={handleProfile}>
-                  Edit Profile
-                </Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
               </Dropdown.Menu>
@@ -328,24 +552,39 @@ export default function EmployeeDashboard() {
         </Row>
 
         <Row>
-          {/* ✅ Route Card */}
+          {/* Route Card */}
           <Col md={8} className="mb-4">
             <Card className="shadow-sm border-0 rounded-4">
-              <Card.Header className="bg-primary text-white">
+              <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">🚦 My Route</h5>
+
+                {/* Mode Selector */}
+                <Form.Select
+                  size="sm"
+                  style={{ width: 160 }}
+                  value={transportMode}
+                  onChange={(e) => setTransportMode(e.target.value)}
+                >
+                  <option value="driving-car">🚗 Driving</option>
+                  <option value="cycling-regular">🚴 Cycling</option>
+                  <option value="foot-walking">🚶 Walking</option>
+                </Form.Select>
               </Card.Header>
+
               <Card.Body>
                 {loading ? (
                   <div className="text-center p-5">
                     <Spinner animation="border" /> Fetching best route...
                   </div>
+                ) : error ? (
+                  <Alert variant="danger">{error}</Alert>
                 ) : route ? (
                   <>
                     <p>
                       Distance: <strong>{route.distanceKm} km</strong> | Time:{" "}
                       <strong>{route.durationMin} min</strong>
                     </p>
-                    <div style={{ height: 480 }}>
+                    <div style={{ height: 420, marginBottom: "1rem" }}>
                       <MapContainer
                         center={center}
                         zoom={12}
@@ -354,7 +593,7 @@ export default function EmployeeDashboard() {
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                         {polyPoints.length > 0 && (
                           <>
-                            <Polyline positions={polyPoints} />
+                            <Polyline positions={polyPoints} color="blue" />
                             <Marker position={polyPoints[0]}>
                               <Popup>Start</Popup>
                             </Marker>
@@ -367,6 +606,17 @@ export default function EmployeeDashboard() {
                         )}
                       </MapContainer>
                     </div>
+
+                    {/* Turn-by-turn steps if available */}
+                    {route.steps && (
+                      <ListGroup variant="flush">
+                        {route.steps.map((step, i) => (
+                          <ListGroup.Item key={i}>
+                            ➡️ {step.instruction}
+                          </ListGroup.Item>
+                        ))}
+                      </ListGroup>
+                    )}
                   </>
                 ) : (
                   <div className="text-muted">
@@ -377,7 +627,7 @@ export default function EmployeeDashboard() {
             </Card>
           </Col>
 
-          {/* ✅ Info Card */}
+          {/* Info Card */}
           <Col md={4}>
             <Card className="shadow-sm border-0 rounded-4">
               <Card.Header className="bg-success text-white">

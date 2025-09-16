@@ -38,7 +38,7 @@ export default function EditProfile() {
       alert("Profile updated successfully!");
       navigate("/employee-dashboard");
     } catch (err) {
-      alert("Failed to update profile");
+      alert("Failed to update profile", err);
     }
   };
 
