@@ -6,6 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "leaflet/dist/leaflet.css";
 import App from "./App.jsx";
 
+import { Provider } from "react-redux";
 
 const queryClient = new QueryClient();
 

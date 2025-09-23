@@ -33,7 +33,13 @@ export default function Sidebar() {
         )}
 
         {role === "EMPLOYEE" && (
-          <Nav.Link onClick={handleProfileClick}>🙍 Profile</Nav.Link>
+          <div>
+            <Nav.Link onClick={handleProfileClick}>🙍 Profile</Nav.Link>
+            <Nav.Link href="/routes">🛣️ Routes</Nav.Link>
+            <Nav.Link href="/notifications">🔔 Notifications</Nav.Link>
+            <Nav.Link href="/analytics">📊 Analytics</Nav.Link>
+            <Nav.Link href="/settings">⚙️ Settings</Nav.Link>
+          </div>
         )}
       </Nav>
     </div>
