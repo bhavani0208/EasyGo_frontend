@@ -310,19 +310,7 @@
 // }
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Spinner,
-  Dropdown,
-  Form,
-  ListGroup,
-  Alert,
-  Badge,
-} from "react-bootstrap";
+import { Card, Button, Dropdown, Badge } from "react-bootstrap";
 import {
   MapContainer,
   TileLayer,
@@ -333,9 +321,7 @@ import {
 import polyline from "polyline";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
-import { bestRouteForEmployee, notifyRouteForEmployee } from "../../api/routes";
 import api from "../../api/client";
-import Sidebar from "../../components/Sidebar";
 import "./../../styles/EmployeeDashboard.css";
 
 export default function EmployeeDashboard() {
@@ -344,19 +330,6 @@ export default function EmployeeDashboard() {
 
   const [employee, setEmployee] = useState(null);
   const [route, setRoute] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [transportMode, setTransportMode] = useState("driving-car");
-  const [error, setError] = useState(null);
-  const [useOfficeTime, setUseOfficeTime] = useState(true);
-
-  function nextOccurrenceISOClient(hhmm, now = new Date()) {
-    if (!hhmm) return null;
-    const [hh, mm] = hhmm.split(":").map(Number);
-    const dt = new Date(now);
-    dt.setHours(hh, mm, 0, 0);
-    if (dt <= now) dt.setDate(dt.getDate() + 1);
-    return dt.toISOString();
-  }
 
   const fetchMyEmployee = useCallback(async () => {
     const res = await api.get(`/employees/user/${user._id}`);
@@ -376,11 +349,6 @@ export default function EmployeeDashboard() {
             [17.4074, 78.4746],
             [17.4332, 78.4512],
           ],
-          steps: [
-            { instruction: "Head northwest on Main Street for 1.2 km" },
-            { instruction: "Turn right onto Highway 24, follow for 6.2 km" },
-            { instruction: "Continue on Tech Park Road to office" },
-          ],
         });
       } catch (e) {
         console.error(e);
@@ -388,7 +356,12 @@ export default function EmployeeDashboard() {
     })();
   }, [fetchMyEmployee]);
 
-  // Map points
+  const handleProfileClick = () => {
+    if (user?._id) {
+      navigate(`/employee/profile/${user._id}`);
+    }
+  };
+
   const polyPoints = useMemo(() => {
     if (!route?.geometry) return [];
     try {
@@ -399,11 +372,12 @@ export default function EmployeeDashboard() {
       return [];
     }
   }, [route]);
+
   const center = polyPoints.length
     ? polyPoints[Math.floor(polyPoints.length / 2)]
     : [17.385, 78.486];
 
-  // Demo weather, traffic, time data
+  // Weather and routes demo data
   const weatherInfo = {
     icon: "fa-cloud-rain",
     desc: "Rain expected next 3 hours. Drive safely.",
@@ -445,122 +419,222 @@ export default function EmployeeDashboard() {
   ];
 
   return (
-    <div className="container" style={{ minHeight: "100vh", display: "flex" }}>
+    <div style={{ minHeight: "100vh", display: "flex" }}>
       {/* Sidebar */}
-      <Sidebar />
+      <aside
+        style={{
+          width: 240,
+          height: "100vh",
+          background: "linear-gradient(135deg, #232526, #414345)",
+          color: "white",
+          padding: "32px 16px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div>
+          <h4 className="mb-4 text-center">🚦 EasyGo</h4>
+          <div className="text-center mb-4">
+            <span
+              style={{
+                display: "inline-block",
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: "#fff",
+                color: "#232526",
+                lineHeight: "64px",
+                fontSize: 28,
+                fontWeight: 700,
+                marginBottom: 6,
+              }}
+            >
+              {user?.name?.[0] || "U"}
+            </span>
+            <h6 className="mb-0">{user?.name}</h6>
+            <small>{user?.email}</small>
+            <div>
+              <Badge bg="info" className="mt-1">
+                Employee
+              </Badge>
+            </div>
+          </div>
+          <div className="side-nav mt-3">
+            {/* <div className="mb-2 fw-semibold" style={{ color: "#ddd" }}>
+              Settings
+            </div> */}
+            <button
+              className="btn btn-link text-white px-0"
+              style={{ textAlign: "left" }}
+              onClick={handleProfileClick}
+            >
+              Profile
+            </button>
+            {/* Add more settings or navigation buttons here as needed */}
+          </div>
+        </div>
 
-      <div className="main-content flex-1 p-4">
+        <Button
+          variant="outline-light"
+          onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+          }}
+        >
+          🚪 Logout
+        </Button>
+      </aside>
+
+      {/* Main Content */}
+      <main
+        style={{
+          flex: 1,
+          padding: "40px 48px",
+          background: "#f8f9fb",
+          overflowX: "auto",
+          minHeight: "100vh",
+        }}
+      >
         {/* Header */}
-        <div className="header d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
           <h2>Employee Route Dashboard</h2>
-          <div className="user-info d-flex align-items-center">
-            {/* Employee image REMOVED */}
+          <div className="d-flex align-items-center">
             <div>
               <h3 style={{ margin: 0 }}>{user?.name || "Employee"}</h3>
               <p className="mb-0">{user?.email}</p>
             </div>
-            <Dropdown>
-              <Dropdown.Toggle variant="outline-dark" id="profile-dropdown">
-                Profile
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item
-                  onClick={() => {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
-                    navigate("/login");
-                  }}
-                >
-                  Logout
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
           </div>
         </div>
 
         {/* Dashboard Cards */}
         <div
-          className="dashboard"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
             gap: 20,
           }}
         >
-          <Card className="card">
-            <Card.Header className="card-header d-flex justify-content-between align-items-center">
-              <div className="card-title">Current Location</div>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>Current Location</div>
               <div
-                className="card-icon bg-primary-light"
-                style={{ width: 50, height: 50, borderRadius: "50%" }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  backgroundColor: "#cfe2ff",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#084298",
+                }}
               >
                 <i className="fas fa-location-dot"></i>
               </div>
             </Card.Header>
-            <div className="card-value">{employee?.city || "Springfield"}</div>
-            <div className="card-desc">
-              Home to Office Distance {route?.distanceKm || "--"} km
-            </div>
+            <Card.Body>
+              <Card.Text>{employee?.city || "Springfield"}</Card.Text>
+              <small>
+                Home to Office Distance {route?.distanceKm || "--"} km
+              </small>
+            </Card.Body>
           </Card>
-          <Card className="card">
-            <Card.Header className="card-header d-flex justify-content-between align-items-center">
-              <div className="card-title">Office Timing</div>
+
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>Office Timing</div>
               <div
-                className="card-icon bg-success-light"
-                style={{ width: 50, height: 50, borderRadius: "50%" }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  backgroundColor: "#d1e7dd",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#0f5132",
+                }}
               >
                 <i className="fas fa-clock"></i>
               </div>
             </Card.Header>
-            <div className="card-value">
-              {employee?.officeStartTime || "9:00 AM"} -{" "}
-              {employee?.officeEndTime || "5:30 PM"}
-            </div>
-            <div className="card-desc">Flexible start 8:30 AM - 9:30 AM</div>
+            <Card.Body>
+              <Card.Text>
+                {employee?.officeStartTime || "9:00 AM"} -{" "}
+                {employee?.officeEndTime || "5:30 PM"}
+              </Card.Text>
+              <small>Flexible start 8:30 AM - 9:30 AM</small>
+            </Card.Body>
           </Card>
-          <Card className="card">
-            <Card.Header className="card-header d-flex justify-content-between align-items-center">
-              <div className="card-title">Today's Weather</div>
+
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>Today's Weather</div>
               <div
-                className="card-icon bg-warning-light"
-                style={{ width: 50, height: 50, borderRadius: "50%" }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  backgroundColor: "#fff3cd",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#664d03",
+                }}
               >
                 <i className={`fas ${weatherInfo.icon}`}></i>
               </div>
             </Card.Header>
-            <div className="card-value">{weatherInfo.temp}</div>
-            <div className="card-desc">{weatherInfo.delay}</div>
+            <Card.Body>
+              <Card.Text>{weatherInfo.temp}</Card.Text>
+              <small>{weatherInfo.delay}</small>
+            </Card.Body>
           </Card>
-          <Card className="card">
-            <Card.Header className="card-header d-flex justify-content-between align-items-center">
-              <div className="card-title">Avg. Travel Time</div>
+
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>Avg. Travel Time</div>
               <div
-                className="card-icon bg-danger-light"
-                style={{ width: 50, height: 50, borderRadius: "50%" }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  backgroundColor: "#f8d7da",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#842029",
+                }}
               >
                 <i className="fas fa-car"></i>
               </div>
             </Card.Header>
-            <div className="card-value">{route?.durationMin || "--"} min</div>
-            <div className="card-desc">Best this week 35 min Wed</div>
+            <Card.Body>
+              <Card.Text>{route?.durationMin || "--"} min</Card.Text>
+              <small>Best this week 35 min Wed</small>
+            </Card.Body>
           </Card>
         </div>
 
         {/* Route Section */}
         <div
-          className="route-section"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 350px",
             gap: 20,
-            marginBottom: 30,
+            marginTop: 30,
           }}
         >
           <div
-            className="map-container"
-            style={{ background: "white", borderRadius: 10, padding: 20 }}
+            style={{
+              background: "white",
+              borderRadius: 10,
+              padding: 20,
+            }}
           >
-            <div style={{ height: 400, marginBottom: "1rem" }}>
+            <div style={{ height: 400, marginBottom: 16 }}>
               <MapContainer
                 center={center}
                 zoom={12}
@@ -580,10 +654,7 @@ export default function EmployeeDashboard() {
                 )}
               </MapContainer>
             </div>
-            <div
-              className="highlight"
-              style={{ margin: "20px 0 10px 0", color: "#e74c3c" }}
-            >
+            <div style={{ color: "#e74c3c", marginBottom: 12 }}>
               Total Distance {route?.distanceKm || "--"} km &nbsp; | &nbsp; Est.
               Time {route?.durationMin || "--"} min
             </div>
@@ -591,13 +662,16 @@ export default function EmployeeDashboard() {
               <i className="fas fa-directions"></i> Start Navigation
             </Button>
           </div>
+
           <div
-            className="route-info"
-            style={{ background: "white", borderRadius: 10, padding: 20 }}
+            style={{
+              background: "white",
+              borderRadius: 10,
+              padding: 20,
+            }}
           >
-            <div className="info-header d-flex align-items-center mb-3">
+            <div className="d-flex align-items-center mb-3">
               <div
-                className="weather-icon"
                 style={{
                   width: 50,
                   height: 50,
@@ -606,20 +680,20 @@ export default function EmployeeDashboard() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  color: "#3498db",
+                  fontSize: 28,
                 }}
               >
-                <i
-                  className="fas fa-cloud-rain"
-                  style={{ fontSize: 28, color: "#3498db" }}
-                ></i>
+                <i className="fas fa-cloud-rain"></i>
               </div>
-              <div className="weather-details">
+              <div style={{ marginLeft: 12 }}>
                 <h5 style={{ margin: 0 }}>Weather Advisory</h5>
-                <p style={{ color: "#7f8c8d" }}>{weatherInfo.desc}</p>
+                <p style={{ color: "#7f8c8d", marginBottom: 0 }}>
+                  {weatherInfo.desc}
+                </p>
               </div>
             </div>
             <div
-              className="timing-info"
               style={{
                 background: "rgba(52,152,219,0.1)",
                 padding: 15,
@@ -635,68 +709,59 @@ export default function EmployeeDashboard() {
                 <span>{employee?.officeStartTime || "9:00 AM"}</span>
               </p>
               <p>
-                Depart By <span className="highlight">8:18 AM</span>
+                Depart By <span style={{ color: "#e74c3c" }}>8:18 AM</span>
               </p>
               <p>
                 Estimated Arrival <span>8:57 AM</span>
               </p>
             </div>
-            <div>
-              <h5 style={{ margin: "25px 0 15px 0" }}>Alternative Routes</h5>
-              <div className="route-options">
-                {routes.map((r) => (
-                  <div
-                    className={`route-option ${r.selected ? "selected" : ""}`}
-                    key={r.title}
-                    style={{
-                      padding: 15,
-                      borderRadius: 8,
-                      marginBottom: 10,
-                      border: r.selected
-                        ? "2px solid #3498db"
-                        : "2px solid #f1f2f6",
-                      background: r.selected ? "rgba(52,152,219,0.06)" : "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div className="route-option-header d-flex justify-content-between">
-                      <div className="route-title" style={{ fontWeight: 600 }}>
-                        {r.title}
-                      </div>
-                      <div className="route-time" style={{ fontWeight: 700 }}>
-                        {r.time}
-                      </div>
-                    </div>
-                    <div
-                      className="route-details d-flex"
-                      style={{ color: "#7f8c8d", fontSize: 14 }}
-                    >
-                      <span>
-                        <i className="fas fa-road"></i> {r.distance}
-                      </span>
-                      <span>
-                        <i className="fas fa-traffic-light"></i>
-                        <span
-                          className={`traffic-light ${r.trafficIcon}`}
-                        ></span>{" "}
-                        {r.traffic}
-                      </span>
-                      <span>
-                        <i className={`fas ${r.weatherIcon}`}></i> {r.weather}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            <h5 style={{ marginBottom: 15 }}>Alternative Routes</h5>
+            {routes.map((r) => (
+              <div
+                key={r.title}
+                style={{
+                  padding: 15,
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  border: r.selected
+                    ? "2px solid #3498db"
+                    : "2px solid #f1f2f6",
+                  background: r.selected ? "rgba(52,152,219,0.06)" : "none",
+                  cursor: "pointer",
+                }}
+                className={r.selected ? "selected-route" : ""}
+              >
+                <div
+                  className="d-flex justify-content-between"
+                  style={{ fontWeight: 600 }}
+                >
+                  <div>{r.title}</div>
+                  <div style={{ fontWeight: 700 }}>{r.time}</div>
+                </div>
+                <div
+                  className="d-flex"
+                  style={{ color: "#7f8c8d", fontSize: 14, gap: 12 }}
+                >
+                  <span>
+                    <i className="fas fa-road"></i> {r.distance}
+                  </span>
+                  <span>
+                    <i className="fas fa-traffic-light"></i> {r.traffic}
+                  </span>
+                  <span>
+                    <i className={`fas ${r.weatherIcon}`}></i> {r.weather}
+                  </span>
+                </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: 20 }}>
-                <Button style={{ background: "#27ae60", border: "none" }}>
-                  <i className="fas fa-bell"></i> Set Departure Reminder
-                </Button>
-              </div>
+            ))}
+            <div style={{ textAlign: "center", marginTop: 20 }}>
+              <Button style={{ background: "#27ae60", border: "none" }}>
+                <i className="fas fa-bell"></i> Set Departure Reminder
+              </Button>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

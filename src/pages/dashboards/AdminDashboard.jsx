@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                 activeSection === "branches" ? "fw-semibold" : ""
               }`}
             >
-              🏢 Manage Branches
+              🏢Branches
             </Nav.Link>
             <Nav.Link
               onClick={() => setActiveSection("employees")}
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
                 activeSection === "employees" ? "fw-semibold" : ""
               }`}
             >
-              👥 Manage Employees
+              👥 Employees
             </Nav.Link>
           </Nav>
         </div>

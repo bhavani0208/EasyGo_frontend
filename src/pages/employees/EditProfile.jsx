@@ -6,6 +6,7 @@ import api from "../../api/client";
 export default function EditProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -13,42 +14,49 @@ export default function EditProfile() {
     officeStartTime: "",
     officeEndTime: "",
   });
+  const [originalForm, setOriginalForm] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // ✅ Fetch employee details
+  // Fetch employee details on mount
   useEffect(() => {
     (async () => {
       try {
         const res = await api.get(`/employees/${id}`);
         setForm(res.data);
+        setOriginalForm(res.data);
       } catch (err) {
         console.error(err);
       }
     })();
   }, [id]);
 
+  // Handle changes only if editing
   const handleChange = (e) => {
+    if (!isEditing) return;
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ Save profile
+  // Save updates
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.put(`/employees/${id}`, form);
       alert("Profile updated successfully!");
-      navigate("/employee-dashboard");
+      setOriginalForm(form);
+      setIsEditing(false);
     } catch (err) {
-      alert("Failed to update profile", err);
+      alert("Failed to update profile");
     }
   };
 
-  // ✅ Cancel with confirmation
+  // Cancel editing with confirmation
   const handleCancel = () => {
     const confirmCancel = window.confirm(
-      "Are you sure you want to discard changes and return to Dashboard?"
+      "Are you sure you want to discard changes and revert?"
     );
     if (confirmCancel) {
-      navigate("/employee-dashboard");
+      setForm(originalForm);
+      setIsEditing(false);
     }
   };
 
@@ -63,6 +71,8 @@ export default function EditProfile() {
               name="name"
               value={form.name}
               onChange={handleChange}
+              readOnly={!isEditing}
+              plaintext={!isEditing}
               required
             />
           </Form.Group>
@@ -74,21 +84,32 @@ export default function EditProfile() {
               name="email"
               value={form.email}
               onChange={handleChange}
+              readOnly={!isEditing}
+              plaintext={!isEditing}
               required
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>Work Mode</Form.Label>
-            <Form.Select
-              name="workMode"
-              value={form.workMode}
-              onChange={handleChange}
-            >
-              <option>Office</option>
-              <option>Hybrid</option>
-              <option>Home</option>
-            </Form.Select>
+            {isEditing ? (
+              <Form.Select
+                name="workMode"
+                value={form.workMode}
+                onChange={handleChange}
+              >
+                <option>Office</option>
+                <option>Hybrid</option>
+                <option>Home</option>
+              </Form.Select>
+            ) : (
+              <Form.Control
+                value={form.workMode}
+                readOnly
+                plaintext
+                tabIndex={-1}
+              />
+            )}
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -98,6 +119,8 @@ export default function EditProfile() {
               name="officeStartTime"
               value={form.officeStartTime}
               onChange={handleChange}
+              readOnly={!isEditing}
+              plaintext={!isEditing}
             />
           </Form.Group>
 
@@ -108,17 +131,33 @@ export default function EditProfile() {
               name="officeEndTime"
               value={form.officeEndTime}
               onChange={handleChange}
+              readOnly={!isEditing}
+              plaintext={!isEditing}
             />
           </Form.Group>
 
-          <div className="d-flex gap-3">
-            <Button type="submit" variant="primary">
-              Save Changes
+          <Button
+            variant="secondary"
+            className="me-3"
+            onClick={() => navigate("/employee-dashboard")}
+          >
+            Back to Dashboard
+          </Button>
+
+          {!isEditing ? (
+            <Button variant="primary" onClick={() => setIsEditing(true)}>
+              Edit
             </Button>
-            <Button variant="secondary" onClick={handleCancel}>
-              Cancel
-            </Button>
-          </div>
+          ) : (
+            <div className="d-flex gap-3">
+              <Button type="submit" variant="success">
+                Save
+              </Button>
+              <Button variant="secondary" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </div>
+          )}
         </Form>
       </Card>
     </Container>
